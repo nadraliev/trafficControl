@@ -9,6 +9,9 @@ namespace trafficControl
 {
     public class Vehicle
     {
+        public event EventHandler Stopped;
+        public event EventHandler Turned;
+
         public enum Direction { Left, Top, Right, Bottom };
 
         public Vector2 position;
@@ -48,6 +51,12 @@ namespace trafficControl
             speed += acceleration;
         }
 
+        public void Turn(Direction newDirection)
+        {
+            direction = newDirection;
+            Turned?.Invoke(this, new EventArgs());
+        }
+
         public void Break()
         {
             while (acceleration > 0) {
@@ -55,6 +64,7 @@ namespace trafficControl
                 Move();
             }
             acceleration = 0;
+            Stopped?.Invoke(this, new EventArgs());
         }
     }
 }
