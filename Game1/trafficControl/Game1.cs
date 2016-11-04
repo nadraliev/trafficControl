@@ -12,10 +12,21 @@ namespace trafficControl
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
+        Vector3 cameraPosition;
+        Vector3 cameraTarget;
+        Matrix world;
+        Matrix projection;
+        Matrix view;
+
+        Model car;
+
+
+        
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            graphics.IsFullScreen = true;
         }
 
         /// <summary>
@@ -26,9 +37,16 @@ namespace trafficControl
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            
+            cameraPosition = new Vector3(200f, 200f, 200f);
+            cameraTarget = new Vector3(100f, 100f, 100f);
+            world = Matrix.CreateWorld(new Vector3(0, 0, 0), Vector3.Forward, Vector3.UnitY);
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);
+            view = Matrix.CreateLookAt(cameraPosition, cameraTarget, Vector3.UnitY);
 
             base.Initialize();
+
+            
         }
 
         /// <summary>
@@ -40,7 +58,7 @@ namespace trafficControl
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            car = Content.Load<Model>("Peugeot_207");
         }
 
         /// <summary>
@@ -62,9 +80,9 @@ namespace trafficControl
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
-
             base.Update(gameTime);
+
+
         }
 
         /// <summary>
@@ -75,9 +93,23 @@ namespace trafficControl
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            foreach (ModelMesh meshe in car.Meshes)
+            {
+                foreach (BasicEffect effect in meshe.Effects)
+                {
+                    effect.EnableDefaultLighting();
+                    effect.PreferPerPixelLighting = true;
+                    effect.LightingEnabled = true;
+                    effect.World = world* Matrix.CreateScale(0.05f);
+                    effect.View = view;
+                    effect.Projection = projection;
+                }
+                meshe.Draw();
+            }
 
             base.Draw(gameTime);
+
+
         }
     }
 }
