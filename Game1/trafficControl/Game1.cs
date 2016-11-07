@@ -18,15 +18,25 @@ namespace trafficControl
         Matrix projection;
         Matrix view;
 
-        Model car;
+        Model junction;
+        Model mers;
+       
 
+        float roadStart = 400;
 
         
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            graphics.IsFullScreen = true;
+            graphics.PreferredBackBufferHeight = 1080;
+            graphics.PreferredBackBufferWidth = 1920;
+            //graphics.IsFullScreen = true;
+            graphics.ApplyChanges();
+
+            IsMouseVisible = true;
+
+            
         }
 
         /// <summary>
@@ -38,10 +48,10 @@ namespace trafficControl
         protected override void Initialize()
         {
             
-            cameraPosition = new Vector3(200f, 200f, 200f);
-            cameraTarget = new Vector3(100f, 100f, 100f);
+            cameraPosition = new Vector3(500f, 900f, 500f);
+            cameraTarget = new Vector3(0f, 0f, 0f);
             world = Matrix.CreateWorld(new Vector3(0, 0, 0), Vector3.Forward, Vector3.UnitY);
-            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), GraphicsDevice.DisplayMode.AspectRatio, 1f, 10000f);
             view = Matrix.CreateLookAt(cameraPosition, cameraTarget, Vector3.UnitY);
 
             base.Initialize();
@@ -58,7 +68,10 @@ namespace trafficControl
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            car = Content.Load<Model>("Peugeot_207");
+            
+            junction = Content.Load<Model>("cylinder");
+            mers = Content.Load<Model>("bv");
+           
         }
 
         /// <summary>
@@ -80,6 +93,8 @@ namespace trafficControl
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+
+
             base.Update(gameTime);
 
 
@@ -93,23 +108,49 @@ namespace trafficControl
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            foreach (ModelMesh meshe in car.Meshes)
-            {
-                foreach (BasicEffect effect in meshe.Effects)
-                {
-                    effect.EnableDefaultLighting();
-                    effect.PreferPerPixelLighting = true;
-                    effect.LightingEnabled = true;
-                    effect.World = world* Matrix.CreateScale(0.05f);
-                    effect.View = view;
-                    effect.Projection = projection;
-                }
-                meshe.Draw();
-            }
+            DrawModel(junction, world, view, projection, new Vector3(0, 0, 0));
+            DrawModel(junction, world, view, projection, new Vector3(0, 0, roadStart/2));
+            DrawModel(junction, world, view, projection, new Vector3(0, 0, roadStart));
+            DrawModel(junction, world, view, projection, new Vector3(0, 0, -roadStart/2));
+            DrawModel(junction, world, view, projection, new Vector3(0, 0, -roadStart));
+            DrawModel(junction, world, view, projection, new Vector3(roadStart/2, 0, 0));
+            DrawModel(junction, world, view, projection, new Vector3(roadStart, 0, 0));
+            DrawModel(junction, world, view, projection, new Vector3(-roadStart/2, 0, 0));
+            DrawModel(junction, world, view, projection, new Vector3(-roadStart, 0, 0));
+            DrawModel(mers, world, view, projection, new Vector3(1600, 5, -600), 0.1f, Matrix.CreateRotationY(MathHelper.ToRadians(-90)));
+            
 
             base.Draw(gameTime);
 
 
+        }
+
+
+        public void DrawModel(Model model, Matrix world, Matrix view, Matrix projection, Vector3 position, float scale, Matrix rotation)
+        {
+            foreach (ModelMesh mesh in model.Meshes)
+            {
+                foreach (BasicEffect effect in mesh.Effects)
+                {
+                    effect.EnableDefaultLighting();
+                    effect.PreferPerPixelLighting = true;
+                    effect.LightingEnabled = true;
+                    effect.World = world * Matrix.CreateTranslation(position) * Matrix.CreateScale(scale) * rotation;
+                    effect.View = view;
+                    effect.Projection = projection;
+                }
+                mesh.Draw();
+            }
+        }
+
+        public void DrawModel(Model model, Matrix world, Matrix view, Matrix projection, Vector3 position, float scale)
+        {
+            DrawModel(model, world, view, projection, position, scale, world);
+        }
+
+        public void DrawModel(Model model, Matrix world, Matrix view, Matrix projection, Vector3 position)
+        {
+            DrawModel(model, world, view, projection, position, 1f);
         }
     }
 }
