@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,14 +15,32 @@ namespace trafficControl
 
         public enum Direction { Left, Top, Right, Bottom };
 
-        public Vector2 position;
-        public Direction direction;
-        public Lane lane;
-        public float speed;
-        public float acceleration;
-        public int startTime;
+        private float acceleration;
+        private float speed;    //dots per millisecond
+        private Vector3 position;
+        private Model model;
+        private Direction direction;
+        private Lane lane;
+        private int startTime;
+        
 
-        public Vehicle(Direction initDirection, Vector2 initPosition, Lane initLane, float initAcceleration, int startTime)
+        public float Acceleration { get { return acceleration; } }
+        public float Speed { get { return speed; } }
+        public Vector3 Position { get { return position; } }
+        public Model Model { get { return model; } set { model = value; } }
+
+        public Vehicle(Model model, Direction initDirection, Vector3 initPosition, Lane initLane, float initAcceleration, int startTime)
+        {
+            this.model = model;
+            direction = initDirection;
+            lane = initLane;
+            position = initPosition;
+            speed = 0;
+            acceleration = initAcceleration;
+            this.startTime = startTime;
+        }
+
+        public Vehicle(Direction initDirection, Vector3 initPosition, Lane initLane, float initAcceleration, int startTime)
         {
             direction = initDirection;
             lane = initLane;
@@ -36,27 +55,34 @@ namespace trafficControl
             switch (direction)
             {
                 case Direction.Left:
-                    position.X -= speed;
+                    position.Z -= speed;
                     break;
                 case Direction.Top:
-                    position.Y += speed;
+                    position.X -= speed;
                     break;
                 case Direction.Right:
-                    position.X += speed;
+                    position.Z += speed;
                     break;
                 case Direction.Bottom:
-                    position.Y -= speed;
+                    position.X += speed;
                     break;
             }
             speed += acceleration;
+            if (speed < 0)
+            {
+                speed = 0;
+                Stopped?.Invoke(this, new EventArgs());
+            }
         }
 
         public void Turn(Direction newDirection)
         {
             direction = newDirection;
             Turned?.Invoke(this, new EventArgs());
+            //change lane
         }
 
+        /*
         public void Break()
         {
             while (acceleration > 0) {
@@ -65,6 +91,17 @@ namespace trafficControl
             }
             acceleration = 0;
             Stopped?.Invoke(this, new EventArgs());
+        }
+        */
+
+        public void GiveAcceleration(float acceleration)
+        {
+            this.acceleration += acceleration;
+        }
+
+        private void ChangeLane(Lane newLane)
+        {
+            lane = newLane;
         }
     }
 }

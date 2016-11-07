@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
 
 namespace trafficControl
 {
@@ -20,6 +22,9 @@ namespace trafficControl
 
         Model junction;
         Model mers;
+        Vehicle car;
+
+        Dictionary<string, Lane> lanes;
        
 
         float roadStart = 400;
@@ -54,6 +59,10 @@ namespace trafficControl
             projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), GraphicsDevice.DisplayMode.AspectRatio, 1f, 10000f);
             view = Matrix.CreateLookAt(cameraPosition, cameraTarget, Vector3.UnitY);
 
+            lanes = new Dictionary<string, Lane>();
+            Lane lane = new Lane(roadStart * 2 / 3, roadStart / 4, roadStart / 4, roadStart / 4);
+            car = new Vehicle(Vehicle.Direction.Top, new Vector3(1600, 5, -600), lane, 2, 1);
+
             base.Initialize();
 
             
@@ -71,6 +80,7 @@ namespace trafficControl
             
             junction = Content.Load<Model>("cylinder");
             mers = Content.Load<Model>("bv");
+            car.Model = mers;
            
         }
 
@@ -93,11 +103,21 @@ namespace trafficControl
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            if (gameTime.ElapsedGameTime.TotalMilliseconds > 1)
+                car.Move();
+            if (Math.Abs(gameTime.TotalGameTime.TotalSeconds - 1.3) < 0.001)
+                car.GiveAcceleration(-4f);
 
+            car.Stopped += Car_Stopped;
 
             base.Update(gameTime);
 
 
+        }
+
+        private void Car_Stopped(object sender, System.EventArgs e)
+        {
+            int i = 1;
         }
 
         /// <summary>
@@ -117,7 +137,7 @@ namespace trafficControl
             DrawModel(junction, world, view, projection, new Vector3(roadStart, 0, 0));
             DrawModel(junction, world, view, projection, new Vector3(-roadStart/2, 0, 0));
             DrawModel(junction, world, view, projection, new Vector3(-roadStart, 0, 0));
-            DrawModel(mers, world, view, projection, new Vector3(1600, 5, -600), 0.1f, Matrix.CreateRotationY(MathHelper.ToRadians(-90)));
+            DrawModel(car.Model, world, view, projection, car.Position, 0.1f, Matrix.CreateRotationY(MathHelper.ToRadians(-90)));
             
 
             base.Draw(gameTime);
