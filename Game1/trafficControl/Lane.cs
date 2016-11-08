@@ -16,6 +16,8 @@ namespace trafficControl
         public Vector2 StartPoint { get; }
         public Vector2 EndPoint { get; }
 
+        public TrafficLight trafficLight;
+
         public Lane(Vector2 startPoint, Vector2 endPoint)
         {
             this.startPoint = startPoint;
