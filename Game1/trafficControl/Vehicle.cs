@@ -19,6 +19,7 @@ namespace trafficControl
         private float speed;    //dots per millisecond
         private Vector3 position;
         private Model model;
+        private float scale = 1;
         private Direction direction;
         private Lane lane;
         private int startTime;
@@ -26,8 +27,9 @@ namespace trafficControl
 
         public float Acceleration { get { return acceleration; } }
         public float Speed { get { return speed; } }
-        public Vector3 Position { get { return position; } }
+        public Vector3 Position { get { return position; } set { position = value; } }
         public Model Model { get { return model; } set { model = value; } }
+        public float Scale { get { return scale; } set { scale = value; } }
 
         public Vehicle(Model model, Direction initDirection, Vector3 initPosition, Lane initLane, float initAcceleration, int startTime)
         {
@@ -45,6 +47,16 @@ namespace trafficControl
             direction = initDirection;
             lane = initLane;
             position = initPosition;
+            speed = 0;
+            acceleration = initAcceleration;
+            this.startTime = startTime;
+        }
+
+        public Vehicle(Direction initDirection,Lane initLane, float initAcceleration, int startTime)
+        {
+            direction = initDirection;
+            lane = initLane;
+            position = new Vector3(0,0,0);
             speed = 0;
             acceleration = initAcceleration;
             this.startTime = startTime;

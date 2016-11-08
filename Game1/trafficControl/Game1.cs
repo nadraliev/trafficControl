@@ -27,7 +27,8 @@ namespace trafficControl
         Dictionary<string, Lane> lanes;
        
 
-        float roadStart = 400;
+        float roadNodeLength = 200;
+        int roadNodesCount = 6;
 
         
         public Game1()
@@ -53,22 +54,24 @@ namespace trafficControl
         protected override void Initialize()
         {
             
-            cameraPosition = new Vector3(500f, 900f, 500f);
+            cameraPosition = new Vector3(400f, 600f, 400f);
             cameraTarget = new Vector3(0f, 0f, 0f);
             world = Matrix.CreateWorld(new Vector3(0, 0, 0), Vector3.Forward, Vector3.UnitY);
-            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), GraphicsDevice.DisplayMode.AspectRatio, 1f, 10000f);
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), GraphicsDevice.DisplayMode.AspectRatio, 1f, 100000f);
             view = Matrix.CreateLookAt(cameraPosition, cameraTarget, Vector3.UnitY);
 
             lanes = new Dictionary<string, Lane>();
-            Lane lane = new Lane(roadStart * 2 / 3, roadStart / 4, roadStart / 4, roadStart / 4);
-            car = new Vehicle(Vehicle.Direction.Top, new Vector3(1600, 5, -600), lane, 2, 1);
+            Lane lane = new Lane(roadNodeLength * 3, roadNodeLength / 2, roadNodeLength / 2, roadNodeLength / 2);
+            car = new Vehicle(Vehicle.Direction.Top, lane, 2, 1);
+            car.Scale = 0.1f;
+            car.Position = new Vector3(400/car.Scale, 0.5f/car.Scale, -60/car.Scale);
 
             base.Initialize();
 
             
         }
 
-        /// <summary>
+        /// <summary>t
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.
         /// </summary>
@@ -128,16 +131,26 @@ namespace trafficControl
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
+            //center node
             DrawModel(junction, world, view, projection, new Vector3(0, 0, 0));
-            DrawModel(junction, world, view, projection, new Vector3(0, 0, roadStart/2));
-            DrawModel(junction, world, view, projection, new Vector3(0, 0, roadStart));
-            DrawModel(junction, world, view, projection, new Vector3(0, 0, -roadStart/2));
-            DrawModel(junction, world, view, projection, new Vector3(0, 0, -roadStart));
-            DrawModel(junction, world, view, projection, new Vector3(roadStart/2, 0, 0));
-            DrawModel(junction, world, view, projection, new Vector3(roadStart, 0, 0));
-            DrawModel(junction, world, view, projection, new Vector3(-roadStart/2, 0, 0));
-            DrawModel(junction, world, view, projection, new Vector3(-roadStart, 0, 0));
-            DrawModel(car.Model, world, view, projection, car.Position, 0.1f, Matrix.CreateRotationY(MathHelper.ToRadians(-90)));
+
+            //down
+            for (int i = 1; i <= roadNodesCount; i++)
+                DrawModel(junction, world, view, projection, new Vector3(0, 0, roadNodeLength*i));
+
+            //up
+            for (int i = 1; i <= roadNodesCount; i++)
+                DrawModel(junction, world, view, projection, new Vector3(0, 0, -roadNodeLength*i));
+
+            //right
+            for (int i = 1; i <= roadNodesCount; i++)
+                DrawModel(junction, world, view, projection, new Vector3(roadNodeLength*i, 0, 0));
+            
+            //left
+            for (int i = 1; i <= roadNodesCount; i++)
+                DrawModel(junction, world, view, projection, new Vector3(-roadNodeLength*i, 0, 0));
+
+            DrawModel(car.Model, world, view, projection, car.Position, car.Scale, Matrix.CreateRotationY(MathHelper.ToRadians(-90)));
             
 
             base.Draw(gameTime);
