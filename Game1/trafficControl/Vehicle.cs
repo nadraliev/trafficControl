@@ -64,26 +64,29 @@ namespace trafficControl
 
         public void Move()
         {
-            switch (direction)
+            if (lane.trafficLight.light.Equals(TrafficLight.Light.Green) || lane.trafficLight.light.Equals(TrafficLight.Light.Yellow))
             {
-                case Direction.Left:
-                    position.Z -= speed;
-                    break;
-                case Direction.Top:
-                    position.X -= speed;
-                    break;
-                case Direction.Right:
-                    position.Z += speed;
-                    break;
-                case Direction.Bottom:
-                    position.X += speed;
-                    break;
-            }
-            speed += acceleration;
-            if (speed < 0)
-            {
-                speed = 0;
-                Stopped?.Invoke(this, new EventArgs());
+                switch (direction)
+                {
+                    case Direction.Left:
+                        position.Z -= speed;
+                        break;
+                    case Direction.Top:
+                        position.X -= speed;
+                        break;
+                    case Direction.Right:
+                        position.Z += speed;
+                        break;
+                    case Direction.Bottom:
+                        position.X += speed;
+                        break;
+                }
+                speed += acceleration;
+                if (speed < 0)
+                {
+                    speed = 0;
+                    Stopped?.Invoke(this, new EventArgs());
+                }
             }
         }
 

@@ -23,6 +23,7 @@ namespace trafficControl
         Model junction;
         Model mers;
         Vehicle car;
+        TrafficLight trafficLight;
 
         Dictionary<string, Lane> lanes;
        
@@ -61,7 +62,9 @@ namespace trafficControl
             view = Matrix.CreateLookAt(cameraPosition, cameraTarget, Vector3.UnitY);
 
             lanes = new Dictionary<string, Lane>();
-            Lane lane = new Lane(roadNodeLength * 3, roadNodeLength / 2, roadNodeLength / 2, roadNodeLength / 2);
+            Lane lane = new Lane(roadNodeLength * (roadNodesCount+1), roadNodeLength / 2, roadNodeLength, roadNodeLength / 2);
+            trafficLight = new TrafficLight();
+            lane.trafficLight = trafficLight;
             car = new Vehicle(Vehicle.Direction.Top, lane, 2, 1);
             car.Scale = 0.1f;
             car.Position = new Vector3(400/car.Scale, 0.5f/car.Scale, -60/car.Scale);
@@ -83,6 +86,8 @@ namespace trafficControl
             
             junction = Content.Load<Model>("cylinder");
             mers = Content.Load<Model>("bv");
+            Model light = Content.Load<Model>("trafficLight");
+            trafficLight.model = light;
             car.Model = mers;
            
         }
@@ -108,8 +113,11 @@ namespace trafficControl
 
             if (gameTime.ElapsedGameTime.TotalMilliseconds > 1)
                 car.Move();
-            if (Math.Abs(gameTime.TotalGameTime.TotalSeconds - 1.3) < 0.001)
+            if (Math.Abs(gameTime.TotalGameTime.TotalSeconds - 5) < 0.001)
                 car.GiveAcceleration(-4f);
+
+            if (Math.Abs(gameTime.TotalGameTime.TotalSeconds - 2) < 0.01)
+                trafficLight.light = TrafficLight.Light.Green;
 
             car.Stopped += Car_Stopped;
 
