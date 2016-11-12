@@ -18,6 +18,7 @@ namespace trafficControl
         public float scale;
         private Model model;
         public BoundingSphere boundingSphere;
+        public double lastChangeSeconds;
 
         public Model Model {
             get {
@@ -35,6 +36,7 @@ namespace trafficControl
         {
             light = Light.Red;
             ChangeLight(light);
+            lastChangeSeconds = 0;
         }
 
         private void ChangeLight(Light newLight)

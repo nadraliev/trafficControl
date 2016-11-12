@@ -118,8 +118,13 @@ namespace trafficControl
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            if (Keyboard.GetState().IsKeyDown(Keys.A))
+
+            if (Keyboard.GetState().IsKeyDown(Keys.A) &&
+                Math.Abs(trafficLights[0].lastChangeSeconds - gameTime.TotalGameTime.TotalSeconds) > 0.2)
+            {
                 trafficLights[0].ToggleLight();
+                trafficLights[0].lastChangeSeconds = gameTime.TotalGameTime.TotalSeconds;
+            }
             
 
             if (gameTime.ElapsedGameTime.TotalMilliseconds > 1)
