@@ -16,7 +16,19 @@ namespace trafficControl
         public Vector3 position;
         public Matrix rotation;
         public float scale;
-        public Model model;
+        private Model model;
+        public BoundingSphere boundingSphere;
+
+        public Model Model {
+            get {
+                return model; }
+            set
+            {
+                model = value;
+                foreach (ModelMesh mesh in value.Meshes)
+                    if (mesh.Name.Equals("planarTrimmedSurface1 group1"))
+                        boundingSphere = mesh.BoundingSphere;
+            } }
 
 
         public TrafficLight()
@@ -25,9 +37,16 @@ namespace trafficControl
             ChangeLight(light);
         }
 
-        public void ChangeLight(Light newLight)
+        private void ChangeLight(Light newLight)
         {
             light = newLight;   
+        }
+
+        public void ToggleLight()
+        {
+            if (light.Equals(Light.Green))
+                ChangeLight(Light.Red);
+            else ChangeLight(Light.Green);
         }
 
         public void Draw(Matrix world, Matrix view, Matrix projection)
@@ -36,7 +55,7 @@ namespace trafficControl
             foreach (ModelMesh mesh in model.Meshes)
             {
                 if (!mesh.Name.Equals(Enum.GetName(typeof(Light), (lightNumber + 1) % 3).ToString().ToLower())
-                   ||
+                   &&
                    !mesh.Name.Equals(Enum.GetName(typeof(Light), (lightNumber + 2) % 3).ToString().ToLower()))
                 {
                     foreach (BasicEffect effect in mesh.Effects)
@@ -48,6 +67,7 @@ namespace trafficControl
                         effect.View = view;
                         effect.Projection = projection;
                     }
+                    
                     mesh.Draw();
                 }
                 

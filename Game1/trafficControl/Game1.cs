@@ -23,7 +23,7 @@ namespace trafficControl
         Model junction;
         Model mers;
         Vehicle car;
-        TrafficLight trafficLight;
+        List<TrafficLight> trafficLights;
 
         Dictionary<string, Lane> lanes;
        
@@ -62,9 +62,16 @@ namespace trafficControl
             view = Matrix.CreateLookAt(cameraPosition, cameraTarget, Vector3.UnitY);
 
             lanes = new Dictionary<string, Lane>();
+            trafficLights = new List<TrafficLight>();
             Lane lane = new Lane(roadNodeLength * (roadNodesCount+1), roadNodeLength / 2, roadNodeLength, roadNodeLength / 2);
-            trafficLight = new TrafficLight();
-            lane.trafficLight = trafficLight;
+
+            trafficLights.Add(new TrafficLight());
+            lane.trafficLight = trafficLights[0];
+            lane.trafficLight.scale = 4;
+            lane.trafficLight.position = new Vector3(40, 0, -30);
+            lane.trafficLight.rotation = world;
+            
+            
             car = new Vehicle(Vehicle.Direction.Top, lane, 2, 1);
             car.Scale = 0.1f;
             car.Position = new Vector3(400/car.Scale, 0.5f/car.Scale, -60/car.Scale);
@@ -87,7 +94,7 @@ namespace trafficControl
             junction = Content.Load<Model>("cylinder");
             mers = Content.Load<Model>("bv");
             Model light = Content.Load<Model>("trafficLight");
-            trafficLight.model = light;
+            trafficLights[0].Model = light;
             car.Model = mers;
            
         }
@@ -111,13 +118,12 @@ namespace trafficControl
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            if (Keyboard.GetState().IsKeyDown(Keys.A))
+                trafficLights[0].ToggleLight();
+            
+
             if (gameTime.ElapsedGameTime.TotalMilliseconds > 1)
                 car.Move();
-            if (Math.Abs(gameTime.TotalGameTime.TotalSeconds - 5) < 0.001)
-                car.GiveAcceleration(-4f);
-
-            if (Math.Abs(gameTime.TotalGameTime.TotalSeconds - 2) < 0.01)
-                trafficLight.light = TrafficLight.Light.Green;
 
             car.Stopped += Car_Stopped;
 
@@ -126,7 +132,7 @@ namespace trafficControl
 
         }
 
-        private void Car_Stopped(object sender, System.EventArgs e)
+        private void Car_Stopped(object sender, EventArgs e)
         {
             int i = 1;
         }
@@ -159,6 +165,9 @@ namespace trafficControl
                 DrawModel(junction, world, view, projection, new Vector3(-roadNodeLength*i, 0, 0));
 
             DrawModel(car.Model, world, view, projection, car.Position, car.Scale, Matrix.CreateRotationY(MathHelper.ToRadians(-90)));
+            trafficLights[0].Draw(world, view, projection);
+
+
             
 
             base.Draw(gameTime);
@@ -192,6 +201,35 @@ namespace trafficControl
         public void DrawModel(Model model, Matrix world, Matrix view, Matrix projection, Vector3 position)
         {
             DrawModel(model, world, view, projection, position, 1f);
+        }
+
+
+        public Ray CalculateRay(Vector2 mouseLocation, Matrix view,
+    Matrix projection, Viewport viewport)
+        {
+            Vector3 nearPoint = viewport.Unproject(new Vector3(mouseLocation.X,
+                    mouseLocation.Y, 0.0f),
+                    projection,
+                    view,
+                    Matrix.Identity);
+
+            Vector3 farPoint = viewport.Unproject(new Vector3(mouseLocation.X,
+                    mouseLocation.Y, 1.0f),
+                    projection,
+                    view,
+                    Matrix.Identity);
+
+            Vector3 direction = farPoint - nearPoint;
+            direction.Normalize();
+
+            return new Ray(nearPoint, direction);
+        }
+
+        public float? IntersectDistance(BoundingSphere sphere, Vector2 mouseLocation,
+            Matrix view, Matrix projection, Viewport viewport)
+        {
+            Ray mouseRay = CalculateRay(mouseLocation, view, projection, viewport);
+            return mouseRay.Intersects(sphere);
         }
     }
 }
