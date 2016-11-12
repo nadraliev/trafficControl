@@ -25,10 +25,12 @@ namespace trafficControl
         Vehicle car;
         List<TrafficLight> trafficLights;
 
-        Dictionary<string, Lane> lanes;
+        Dictionary<Lanes, Lane> lanes;
+        enum Lanes { BottomRight, BottomLeft, TopRight, TopLeft, LeftTop, LeftBottom, RightTop, RightBottom};
        
 
         float roadNodeLength = 200;
+        float roadNodeLengthScaled = 2000;
         int roadNodesCount = 6;
 
         
@@ -54,27 +56,34 @@ namespace trafficControl
         /// </summary>
         protected override void Initialize()
         {
-            
-            cameraPosition = new Vector3(400f, 600f, 400f);
+
+            cameraPosition = new Vector3(4000f, 6000f, 4000f);
             cameraTarget = new Vector3(0f, 0f, 0f);
             world = Matrix.CreateWorld(new Vector3(0, 0, 0), Vector3.Forward, Vector3.UnitY);
-            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), GraphicsDevice.DisplayMode.AspectRatio, 1f, 100000f);
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000000f);
             view = Matrix.CreateLookAt(cameraPosition, cameraTarget, Vector3.UnitY);
 
-            lanes = new Dictionary<string, Lane>();
-            trafficLights = new List<TrafficLight>();
-            Lane lane = new Lane(roadNodeLength * (roadNodesCount+1), roadNodeLength / 2, roadNodeLength, roadNodeLength / 2);
+            lanes = new Dictionary<Lanes, Lane>();
+            lanes.Add(Lanes.BottomRight, new Lane(roadNodeLengthScaled * (roadNodesCount + 1), -roadNodeLengthScaled / 4, roadNodeLengthScaled / 2, -roadNodeLengthScaled / 4, Lane.Direction.Top));
+            lanes.Add(Lanes.BottomLeft, new Lane(roadNodeLengthScaled * (roadNodesCount + 1), roadNodeLengthScaled / 4, roadNodeLengthScaled / 2, roadNodeLengthScaled / 4, Lane.Direction.Top));
+            lanes.Add(Lanes.LeftBottom, new Lane(roadNodeLengthScaled * (roadNodesCount + 1), -roadNodeLengthScaled / 4, roadNodeLengthScaled / 2, -roadNodeLengthScaled / 4, Lane.Direction.Right));
+            lanes.Add(Lanes.LeftTop, new Lane(roadNodeLengthScaled * (roadNodesCount + 1), roadNodeLengthScaled / 4, roadNodeLengthScaled / 2, roadNodeLengthScaled / 4, Lane.Direction.Right));
+            lanes.Add(Lanes.TopLeft, new Lane(roadNodeLengthScaled * (roadNodesCount + 1), -roadNodeLengthScaled / 4, roadNodeLengthScaled / 2, -roadNodeLengthScaled / 4, Lane.Direction.Bottom));
+            lanes.Add(Lanes.TopRight, new Lane(roadNodeLengthScaled * (roadNodesCount + 1), roadNodeLengthScaled / 4, roadNodeLengthScaled / 2, roadNodeLengthScaled / 4, Lane.Direction.Bottom));
+            lanes.Add(Lanes.RightTop, new Lane(roadNodeLengthScaled * (roadNodesCount + 1), -roadNodeLengthScaled / 4, roadNodeLengthScaled / 2, -roadNodeLengthScaled / 4, Lane.Direction.Left));
+            lanes.Add(Lanes.RightBottom, new Lane(roadNodeLengthScaled * (roadNodesCount + 1), roadNodeLengthScaled / 4, roadNodeLengthScaled / 2, roadNodeLengthScaled / 4, Lane.Direction.Left));
 
+            trafficLights = new List<TrafficLight>();
             trafficLights.Add(new TrafficLight());
-            lane.trafficLight = trafficLights[0];
-            lane.trafficLight.scale = 4;
-            lane.trafficLight.position = new Vector3(40, 0, -30);
-            lane.trafficLight.rotation = world;
-            
-            
-            car = new Vehicle(Vehicle.Direction.Top, lane, 2, 1);
-            car.Scale = 0.1f;
-            car.Position = new Vector3(400/car.Scale, 0.5f/car.Scale, -60/car.Scale);
+            lanes[Lanes.BottomRight].trafficLight = trafficLights[0];
+            lanes[Lanes.BottomRight].trafficLight.position = new Vector3(40, 0, -30);
+            lanes[Lanes.BottomRight].trafficLight.rotation = world;
+
+            lanes[Lanes.LeftTop].trafficLight = trafficLights[0];
+            lanes[Lanes.BottomLeft].trafficLight = trafficLights[0];
+            lanes[Lanes.TopLeft].trafficLight = trafficLights[0];
+            lanes[Lanes.RightBottom].trafficLight = trafficLights[0];
+            car = new Vehicle(lanes[Lanes.RightBottom], 2, 1, 1);
 
             base.Initialize();
 
@@ -151,25 +160,25 @@ namespace trafficControl
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             //center node
-            DrawModel(junction, world, view, projection, new Vector3(0, 0, 0));
+            DrawModel(junction, world, view, projection, new Vector3(0, 0, 0),10);
 
             //down
             for (int i = 1; i <= roadNodesCount; i++)
-                DrawModel(junction, world, view, projection, new Vector3(0, 0, roadNodeLength*i));
+                DrawModel(junction, world, view, projection, new Vector3(0, 0, roadNodeLength*i), 10);
 
             //up
             for (int i = 1; i <= roadNodesCount; i++)
-                DrawModel(junction, world, view, projection, new Vector3(0, 0, -roadNodeLength*i));
+                DrawModel(junction, world, view, projection, new Vector3(0, 0, -roadNodeLength*i),10);
 
             //right
             for (int i = 1; i <= roadNodesCount; i++)
-                DrawModel(junction, world, view, projection, new Vector3(roadNodeLength*i, 0, 0));
+                DrawModel(junction, world, view, projection, new Vector3(roadNodeLength*i, 0, 0),10);
             
             //left
             for (int i = 1; i <= roadNodesCount; i++)
-                DrawModel(junction, world, view, projection, new Vector3(-roadNodeLength*i, 0, 0));
+                DrawModel(junction, world, view, projection, new Vector3(-roadNodeLength*i, 0, 0),10);
 
-            DrawModel(car.Model, world, view, projection, car.Position, car.Scale, Matrix.CreateRotationY(MathHelper.ToRadians(-90)));
+            DrawModel(car.Model, world, view, projection, car.Position, car.Scale, Matrix.CreateRotationY(MathHelper.ToRadians((int)car.Lane.direction)));
             trafficLights[0].Draw(world, view, projection);
 
 
@@ -190,7 +199,15 @@ namespace trafficControl
                     effect.EnableDefaultLighting();
                     effect.PreferPerPixelLighting = true;
                     effect.LightingEnabled = true;
-                    effect.World = world * Matrix.CreateTranslation(position) * Matrix.CreateScale(scale) * rotation;
+                    effect.World = world;
+
+                    
+                    effect.World *= Matrix.CreateTranslation(position);
+                    effect.World *= Matrix.CreateScale(scale);
+                    effect.World *= rotation;
+                   
+                    
+                    
                     effect.View = view;
                     effect.Projection = projection;
                 }

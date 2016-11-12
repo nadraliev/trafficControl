@@ -37,6 +37,7 @@ namespace trafficControl
             light = Light.Red;
             ChangeLight(light);
             lastChangeSeconds = 0;
+            scale = 40;
         }
 
         private void ChangeLight(Light newLight)

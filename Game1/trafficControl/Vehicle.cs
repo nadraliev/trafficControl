@@ -13,15 +13,15 @@ namespace trafficControl
         public event EventHandler Stopped;
         public event EventHandler Turned;
 
-        public enum Direction { Left, Top, Right, Bottom };
 
         private float acceleration;
         private float speed;    //dots per millisecond
         private Vector3 position;
         private Model model;
         private float scale = 1;
-        private Direction direction;
         private Lane lane;
+        private Lane.Direction direction;
+  
         private int startTime;
         
 
@@ -30,8 +30,9 @@ namespace trafficControl
         public Vector3 Position { get { return position; } set { position = value; } }
         public Model Model { get { return model; } set { model = value; } }
         public float Scale { get { return scale; } set { scale = value; } }
+        public Lane Lane { get { return lane; } set { lane = value; } }
 
-        public Vehicle(Model model, Direction initDirection, Vector3 initPosition, Lane initLane, float initAcceleration, int startTime)
+        public Vehicle(Model model, Lane.Direction initDirection, Vector3 initPosition, Lane initLane, float initAcceleration, int startTime)
         {
             this.model = model;
             direction = initDirection;
@@ -42,7 +43,7 @@ namespace trafficControl
             this.startTime = startTime;
         }
 
-        public Vehicle(Direction initDirection, Vector3 initPosition, Lane initLane, float initAcceleration, int startTime)
+        public Vehicle(Lane.Direction initDirection, Vector3 initPosition, Lane initLane, float initAcceleration, int startTime)
         {
             direction = initDirection;
             lane = initLane;
@@ -52,7 +53,7 @@ namespace trafficControl
             this.startTime = startTime;
         }
 
-        public Vehicle(Direction initDirection,Lane initLane, float initAcceleration, int startTime)
+        public Vehicle(Lane.Direction initDirection,Lane initLane, float initAcceleration, int startTime)
         {
             direction = initDirection;
             lane = initLane;
@@ -62,25 +63,23 @@ namespace trafficControl
             this.startTime = startTime;
         }
 
+        public Vehicle(Lane initLane, float initAcceleration, int startTime, float scale)
+        {
+            direction = initLane.direction;
+            lane = initLane;
+            position = new Vector3(lane.StartPoint.X/scale, 5, lane.StartPoint.Y/scale);
+            this.scale = scale;
+            speed = 0;
+            acceleration = initAcceleration;
+            this.startTime = startTime;
+        }
+
         public void Move()
         {
             if (lane.trafficLight.light.Equals(TrafficLight.Light.Green) || lane.trafficLight.light.Equals(TrafficLight.Light.Yellow))
             {
-                switch (direction)
-                {
-                    case Direction.Left:
-                        position.Z -= speed;
-                        break;
-                    case Direction.Top:
-                        position.X -= speed;
-                        break;
-                    case Direction.Right:
-                        position.Z += speed;
-                        break;
-                    case Direction.Bottom:
-                        position.X += speed;
-                        break;
-                }
+                position.X -= speed;
+                
                 speed += acceleration;
                 if (speed < 0)
                 {
@@ -90,7 +89,7 @@ namespace trafficControl
             }
         }
 
-        public void Turn(Direction newDirection)
+        public void Turn(Lane.Direction newDirection)
         {
             direction = newDirection;
             Turned?.Invoke(this, new EventArgs());
